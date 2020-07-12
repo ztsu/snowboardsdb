@@ -1,0 +1,56 @@
+schema:
+  - ./*.graphql
+
+exec:
+  filename: graphql_gen.go
+  package: graphql
+
+model:
+  filename: models_gen.go
+  package: graphql
+
+models:
+  Brand:
+    fields:
+      founders:
+        resolver: true
+      catalogues:
+        resolver: true
+  Brands:
+    fields:
+      list:
+        resolver: true
+      total:
+        resolver: true
+  BrandCatalogues:
+    fields:
+      brand:
+        resolver: true
+      list:
+        resolver: true
+      total:
+        resolver: true
+  CatalogueOnIssuu:
+    fields:
+      brand:
+        resolver: true
+  Catalogues:
+    fields:
+      list:
+        resolver: true
+      total:
+        resolver: true
+  Snowboards:
+    fields:
+      list:
+        resolver: true
+      total:
+        resolver: true
+  Snowboard:
+    fields:
+      fullName:
+        resolver: true
+      brand:
+        resolver: true
+      images:
+        resolver: true

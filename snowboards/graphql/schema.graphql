@@ -1,0 +1,185 @@
+type Query {
+  brands: Brands
+  catalogues: Catalogues
+  snowboards: Snowboards
+  version: String!
+}
+
+type Brands {
+  list(filter: BrandListFilter sort: BrandListSort! = NAME_ASC limit: Int! = 10 offset: Int! = 0): BrandList!
+  total(filter: BrandListFilter): Int!
+}
+
+type BrandList {
+  items: [Brand]!
+}
+
+input BrandListFilter {
+  id: [Int!]
+  nameStartsWith: String
+}
+
+enum BrandListSort {
+  ID_ASC
+  ID_DESC
+  NAME_ASC
+  NAME_DESC
+}
+
+type Brand {
+  id: Int!
+  name: String!
+  websiteUrl: String!
+  foundedIn: Int #Year
+  founders: [Person]!
+  originsFrom: String
+  catalogues: BrandCatalogues!
+}
+
+type BrandCatalogues {
+  brand: Brand!
+  list(filter: BrandCataloguesListFilter sort: CatalogueListSort! = SEASON_ASC limit: Int! = 10 offset: Int! = 0): CatalogueList!
+  total(filter: BrandCataloguesListFilter): Int!
+}
+
+input BrandCataloguesListFilter {
+  season: [Season!]
+}
+
+type Person {
+  id: Int!
+  name: String!
+}
+
+type Catalogues {
+  list(filter: CatalogueListFilter sort: CatalogueListSort! = SEASON_ASC limit: Int! = 10 offset: Int! = 0): CatalogueList!
+  total(filter: CatalogueListFilter): Int!
+}
+
+type CatalogueList {
+  items: [Catalogue]!
+}
+
+input CatalogueListFilter {
+  id: [Int!]
+  season: [Season!]
+  brandId: [Int!]
+}
+
+enum CatalogueListSort {
+  ID_ASC
+  ID_DESC
+  SEASON_ASC
+  SEASON_DESC
+}
+
+interface Catalogue {
+  id: Int!
+  season: Season!
+  brand: BrandResolveResult!
+}
+
+type CatalogueOnIssuu implements Catalogue {
+  id: Int!
+  season: Season!
+  link: String!
+  brand: BrandResolveResult!
+}
+
+type BrandResolveError {
+  message: String!
+}
+
+type BrandNotFoundError {
+  message: String!
+}
+
+union BrandResolveResult = Brand | BrandNotFoundError | BrandResolveError
+
+enum Season {
+  W0001
+  W0102
+  W0203
+  W0304
+  W0405
+  W0506
+  W0607
+  W0708
+  W0809
+  W0910
+
+  W1011
+  W1112
+  W1213
+  W1314
+  W1415
+  W1516
+  W1617
+  W1718
+  W1819
+  W1920
+
+  W2021
+}
+
+type Snowboards {
+  list(filter: SnowboardListFilter sort: SnowboardListSort! = NAME_ASC limit: Int! = 10 offset: Int! = 0): SnowboardList!
+  total(filter: SnowboardListFilter): Int!
+}
+
+input SnowboardListFilter {
+  id: [Int!]
+  season: [Season!]
+  brandId: [Int!]
+}
+
+enum SnowboardListSort {
+  NAME_ASC
+  NAME_DESC
+  SEASON_ASC
+  SEASON_DESC
+}
+
+type SnowboardList {
+  items: [Snowboard]!
+}
+
+type Snowboard {
+  id: Int!
+  name: String!
+  fullName: String!
+  type: SnowboardType!
+  season: Season!
+  brand: BrandResolveResult!
+  images(limit: Int! = 10 offset: Int! = 0): [SnowboardImage!]!
+}
+
+enum SnowboardType {
+  SNOWBOARD
+  SPLITBOARD
+  POWSURFER
+  SPLITSURFER
+  SNOWSKATE
+}
+
+interface SnowboardImage {
+  url: String!
+}
+
+type SnowboardGeneralImage implements SnowboardImage {
+  url: String!
+}
+
+type SnowboardSizeImage implements SnowboardImage {
+  url: String!
+  size: String!
+}
+
+type SnowboardBaseImage implements SnowboardImage {
+  url: String!
+  colorOfBase: String!
+}
+
+type Mutation {
+  test: String!
+}
