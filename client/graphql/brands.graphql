@@ -1,0 +1,19 @@
+query GetBrands(
+    $filter: BrandListFilter!
+) {
+    brands {
+        total(filter: $filter)
+        list(filter: $filter) {
+            items {
+                name
+                websiteUrl
+                originsFrom
+                foundedIn
+                founders {
+                    id
+                    name
+                }
+            }
+        }
+    }
+}

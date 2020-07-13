@@ -1,0 +1,13 @@
+model:
+  filename: ./models_gen.go
+client:
+  filename: ./client.go
+endpoint:
+  url: http://localhost/graphql
+models:
+  Int:
+    model: github.com/99designs/gqlgen/graphql.Int64
+  Date:
+    model: github.com/99designs/gqlgen/graphql.Time
+query:
+  - "./graphql/*.graphql" # Where are all the query files located?
