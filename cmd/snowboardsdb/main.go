@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/ztsu/snowboardsdb/snowboardsdb/graphql"
 	"github.com/ztsu/snowboardsdb/snowboardsdb/postgres"
 	"log"
@@ -28,6 +29,7 @@ func main() {
 
 	mux.Handle("/graphql", graphql.Handler(NewStores(pool)))
 	mux.Handle("/pg", playground.Handler("GraphQL playground", "/graphql"))
+	mux.Handle("/metrics", promhttp.Handler())
 
 	s := http.Server{
 		Addr:         addr,

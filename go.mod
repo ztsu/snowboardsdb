@@ -10,6 +10,7 @@ require (
 	github.com/go-pg/pg v8.0.6+incompatible // indirect
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/prometheus/client_golang v1.7.1
 	github.com/urfave/cli v1.20.0 // indirect
 	github.com/vektah/dataloaden v0.3.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.0.1
