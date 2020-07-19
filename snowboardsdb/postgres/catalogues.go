@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/elgris/sqrl"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 const (
@@ -19,7 +19,7 @@ func NewCataloguesStore(pg *pgxpool.Pool) *cataloguesStore {
 	return &cataloguesStore{pg: pg}
 }
 
-func (store *cataloguesStore) Count(ctx context.Context, query snowboards.CataloguesQuery) (int, error) {
+func (store *cataloguesStore) Count(ctx context.Context, query snowboardsdb.CataloguesQuery) (int, error) {
 	var (
 		total int
 	)
@@ -36,7 +36,7 @@ func (store *cataloguesStore) Count(ctx context.Context, query snowboards.Catalo
 	return total, err
 }
 
-func (store *cataloguesStore) List(ctx context.Context, query snowboards.CataloguesQuery) ([]*snowboards.Catalogue, error) {
+func (store *cataloguesStore) List(ctx context.Context, query snowboardsdb.CataloguesQuery) ([]*snowboardsdb.Catalogue, error) {
 	q := SelectFromCatalogues("id", `"brandId"`, "season", "type", "url", "size").
 		Where(query).
 		Sort(query).
@@ -54,10 +54,10 @@ func (store *cataloguesStore) List(ctx context.Context, query snowboards.Catalog
 
 	defer rows.Close()
 
-	catalogues := make([]*snowboards.Catalogue, 0)
+	catalogues := make([]*snowboardsdb.Catalogue, 0)
 
 	for rows.Next() {
-		catalogue := new(snowboards.Catalogue)
+		catalogue := new(snowboardsdb.Catalogue)
 
 		err := rows.Scan(
 			&catalogue.ID,
@@ -90,7 +90,7 @@ func SelectFromCatalogues(columns ...string) *cataloguesSelectBuilder {
 	}
 }
 
-func (catalogues *cataloguesSelectBuilder) Where(query snowboards.CataloguesQuery) *cataloguesSelectBuilder {
+func (catalogues *cataloguesSelectBuilder) Where(query snowboardsdb.CataloguesQuery) *cataloguesSelectBuilder {
 	if len(query.ID) > 0 {
 		catalogues.SelectBuilder = catalogues.SelectBuilder.Where(sqrl.Eq{"id": query.ID})
 	}
@@ -106,13 +106,13 @@ func (catalogues *cataloguesSelectBuilder) Where(query snowboards.CataloguesQuer
 	return catalogues
 }
 
-func (catalogues *cataloguesSelectBuilder) Sort(query snowboards.CataloguesQuery) *cataloguesSelectBuilder {
+func (catalogues *cataloguesSelectBuilder) Sort(query snowboardsdb.CataloguesQuery) *cataloguesSelectBuilder {
 	if len(query.Sort) > 0 {
 		for _, s := range query.Sort {
 			switch s {
-			case snowboards.CataloguesQuerySortSeason:
+			case snowboardsdb.CataloguesQuerySortSeason:
 				catalogues.SelectBuilder = catalogues.SelectBuilder.OrderBy(`"season"`)
-			case snowboards.CataloguesQuerySortSeasonDesc:
+			case snowboardsdb.CataloguesQuerySortSeasonDesc:
 				catalogues.SelectBuilder = catalogues.SelectBuilder.OrderBy(`"season" desc`)
 			}
 		}
@@ -121,7 +121,7 @@ func (catalogues *cataloguesSelectBuilder) Sort(query snowboards.CataloguesQuery
 	return catalogues
 }
 
-func (catalogues *cataloguesSelectBuilder) LimitOffset(query snowboards.CataloguesQuery) *cataloguesSelectBuilder {
+func (catalogues *cataloguesSelectBuilder) LimitOffset(query snowboardsdb.CataloguesQuery) *cataloguesSelectBuilder {
 	if query.Limit != nil {
 		catalogues.SelectBuilder = catalogues.SelectBuilder.Limit(*query.Limit)
 	}

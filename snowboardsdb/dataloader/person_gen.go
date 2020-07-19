@@ -3,15 +3,15 @@
 package dataloader
 
 import (
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 	"sync"
 	"time"
 )
 
-// BrandLoaderConfig captures the config to create a new BrandLoader
-type BrandLoaderConfig struct {
+// PersonLoaderConfig captures the config to create a new PersonLoader
+type PersonLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []int) ([]*snowboards.Brand, []error)
+	Fetch func(keys []int) ([]*snowboardsdb.Person, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -20,19 +20,19 @@ type BrandLoaderConfig struct {
 	MaxBatch int
 }
 
-// NewBrandLoader creates a new BrandLoader given a fetch, wait, and maxBatch
-func NewBrandLoader(config BrandLoaderConfig) *BrandLoader {
-	return &BrandLoader{
+// NewPersonLoader creates a new PersonLoader given a fetch, wait, and maxBatch
+func NewPersonLoader(config PersonLoaderConfig) *PersonLoader {
+	return &PersonLoader{
 		fetch:    config.Fetch,
 		wait:     config.Wait,
 		maxBatch: config.MaxBatch,
 	}
 }
 
-// BrandLoader batches and caches requests
-type BrandLoader struct {
+// PersonLoader batches and caches requests
+type PersonLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []int) ([]*snowboards.Brand, []error)
+	fetch func(keys []int) ([]*snowboardsdb.Person, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -43,51 +43,51 @@ type BrandLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[int]*snowboards.Brand
+	cache map[int]*snowboardsdb.Person
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
-	batch *brandLoaderBatch
+	batch *personLoaderBatch
 
 	// mutex to prevent races
 	mu sync.Mutex
 }
 
-type brandLoaderBatch struct {
+type personLoaderBatch struct {
 	keys    []int
-	data    []*snowboards.Brand
+	data    []*snowboardsdb.Person
 	error   []error
 	closing bool
 	done    chan struct{}
 }
 
-// Load a Brand by key, batching and caching will be applied automatically
-func (l *BrandLoader) Load(key int) (*snowboards.Brand, error) {
+// Load a Person by key, batching and caching will be applied automatically
+func (l *PersonLoader) Load(key int) (*snowboardsdb.Person, error) {
 	return l.LoadThunk(key)()
 }
 
-// LoadThunk returns a function that when called will block waiting for a Brand.
+// LoadThunk returns a function that when called will block waiting for a Person.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *BrandLoader) LoadThunk(key int) func() (*snowboards.Brand, error) {
+func (l *PersonLoader) LoadThunk(key int) func() (*snowboardsdb.Person, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
-		return func() (*snowboards.Brand, error) {
+		return func() (*snowboardsdb.Person, error) {
 			return it, nil
 		}
 	}
 	if l.batch == nil {
-		l.batch = &brandLoaderBatch{done: make(chan struct{})}
+		l.batch = &personLoaderBatch{done: make(chan struct{})}
 	}
 	batch := l.batch
 	pos := batch.keyIndex(l, key)
 	l.mu.Unlock()
 
-	return func() (*snowboards.Brand, error) {
+	return func() (*snowboardsdb.Person, error) {
 		<-batch.done
 
-		var data *snowboards.Brand
+		var data *snowboardsdb.Person
 		if pos < len(batch.data) {
 			data = batch.data[pos]
 		}
@@ -112,43 +112,43 @@ func (l *BrandLoader) LoadThunk(key int) func() (*snowboards.Brand, error) {
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *BrandLoader) LoadAll(keys []int) ([]*snowboards.Brand, []error) {
-	results := make([]func() (*snowboards.Brand, error), len(keys))
+func (l *PersonLoader) LoadAll(keys []int) ([]*snowboardsdb.Person, []error) {
+	results := make([]func() (*snowboardsdb.Person, error), len(keys))
 
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
 
-	brands := make([]*snowboards.Brand, len(keys))
+	persons := make([]*snowboardsdb.Person, len(keys))
 	errors := make([]error, len(keys))
 	for i, thunk := range results {
-		brands[i], errors[i] = thunk()
+		persons[i], errors[i] = thunk()
 	}
-	return brands, errors
+	return persons, errors
 }
 
-// LoadAllThunk returns a function that when called will block waiting for a Brands.
+// LoadAllThunk returns a function that when called will block waiting for a Persons.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *BrandLoader) LoadAllThunk(keys []int) func() ([]*snowboards.Brand, []error) {
-	results := make([]func() (*snowboards.Brand, error), len(keys))
+func (l *PersonLoader) LoadAllThunk(keys []int) func() ([]*snowboardsdb.Person, []error) {
+	results := make([]func() (*snowboardsdb.Person, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
-	return func() ([]*snowboards.Brand, []error) {
-		brands := make([]*snowboards.Brand, len(keys))
+	return func() ([]*snowboardsdb.Person, []error) {
+		persons := make([]*snowboardsdb.Person, len(keys))
 		errors := make([]error, len(keys))
 		for i, thunk := range results {
-			brands[i], errors[i] = thunk()
+			persons[i], errors[i] = thunk()
 		}
-		return brands, errors
+		return persons, errors
 	}
 }
 
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *BrandLoader) Prime(key int, value *snowboards.Brand) bool {
+func (l *PersonLoader) Prime(key int, value *snowboardsdb.Person) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
@@ -162,22 +162,22 @@ func (l *BrandLoader) Prime(key int, value *snowboards.Brand) bool {
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *BrandLoader) Clear(key int) {
+func (l *PersonLoader) Clear(key int) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *BrandLoader) unsafeSet(key int, value *snowboards.Brand) {
+func (l *PersonLoader) unsafeSet(key int, value *snowboardsdb.Person) {
 	if l.cache == nil {
-		l.cache = map[int]*snowboards.Brand{}
+		l.cache = map[int]*snowboardsdb.Person{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *brandLoaderBatch) keyIndex(l *BrandLoader, key int) int {
+func (b *personLoaderBatch) keyIndex(l *PersonLoader, key int) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i
@@ -201,7 +201,7 @@ func (b *brandLoaderBatch) keyIndex(l *BrandLoader, key int) int {
 	return pos
 }
 
-func (b *brandLoaderBatch) startTimer(l *BrandLoader) {
+func (b *personLoaderBatch) startTimer(l *PersonLoader) {
 	time.Sleep(l.wait)
 	l.mu.Lock()
 
@@ -217,7 +217,7 @@ func (b *brandLoaderBatch) startTimer(l *BrandLoader) {
 	b.end(l)
 }
 
-func (b *brandLoaderBatch) end(l *BrandLoader) {
+func (b *personLoaderBatch) end(l *PersonLoader) {
 	b.data, b.error = l.fetch(b.keys)
 	close(b.done)
 }

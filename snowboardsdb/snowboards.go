@@ -1,4 +1,4 @@
-package snowboards
+package snowboardsdb
 
 type Brand struct {
 	ID          int

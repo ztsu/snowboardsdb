@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/elgris/sqrl"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 const (
@@ -19,7 +19,7 @@ func NewBrandsStore(pg *pgxpool.Pool) *brandsStore {
 	return &brandsStore{pg: pg}
 }
 
-func (r *brandsStore) Count(ctx context.Context, query snowboards.BrandsQuery) (int, error) {
+func (r *brandsStore) Count(ctx context.Context, query snowboardsdb.BrandsQuery) (int, error) {
 	var (
 		total int
 	)
@@ -36,7 +36,7 @@ func (r *brandsStore) Count(ctx context.Context, query snowboards.BrandsQuery) (
 	return total, err
 }
 
-func (r *brandsStore) List(ctx context.Context, query snowboards.BrandsQuery) ([]*snowboards.Brand, error) {
+func (r *brandsStore) List(ctx context.Context, query snowboardsdb.BrandsQuery) ([]*snowboardsdb.Brand, error) {
 	sb := SelectFromBrands(
 		"id",
 		`"name"`,
@@ -49,9 +49,9 @@ func (r *brandsStore) List(ctx context.Context, query snowboards.BrandsQuery) ([
 	if len(query.Sort) > 0 {
 		for _, s := range query.Sort {
 			switch s {
-			case snowboards.BrandsQuerySortName:
+			case snowboardsdb.BrandsQuerySortName:
 				sb.OrderBy(`"name"`)
-			case snowboards.BrandsQuerySortNameDesc:
+			case snowboardsdb.BrandsQuerySortNameDesc:
 				sb.OrderBy(`"name" desc`)
 			}
 		}
@@ -69,10 +69,10 @@ func (r *brandsStore) List(ctx context.Context, query snowboards.BrandsQuery) ([
 
 	defer rows.Close()
 
-	brands := make([]*snowboards.Brand, 0)
+	brands := make([]*snowboardsdb.Brand, 0)
 
 	for rows.Next() {
-		brand := new(snowboards.Brand)
+		brand := new(snowboardsdb.Brand)
 
 		err := rows.Scan(
 			&brand.ID,
@@ -105,7 +105,7 @@ func SelectFromBrands(columns ...string) *brandsSelectBuilder {
 	}
 }
 
-func (brands *brandsSelectBuilder) Where(query snowboards.BrandsQuery) *brandsSelectBuilder {
+func (brands *brandsSelectBuilder) Where(query snowboardsdb.BrandsQuery) *brandsSelectBuilder {
 	if query.NameLike != nil {
 		brands.SelectBuilder = brands.SelectBuilder.Where(
 			sqrl.Expr("LOWER(name) LIKE ?", *query.NameLike), // @todo replace with regexp
@@ -119,7 +119,7 @@ func (brands *brandsSelectBuilder) Where(query snowboards.BrandsQuery) *brandsSe
 	return brands
 }
 
-func (brands *brandsSelectBuilder) LimitOffset(query snowboards.BrandsQuery) *brandsSelectBuilder {
+func (brands *brandsSelectBuilder) LimitOffset(query snowboardsdb.BrandsQuery) *brandsSelectBuilder {
 	if query.Limit != nil {
 		brands.SelectBuilder = brands.SelectBuilder.Limit(*query.Limit)
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/elgris/sqrl"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 const (
@@ -19,7 +19,7 @@ func NewImageStore(pg *pgxpool.Pool) *imageStore {
 	return &imageStore{pg: pg}
 }
 
-func (r *imageStore) Count(ctx context.Context, query snowboards.ImageQuery) (int, error) {
+func (r *imageStore) Count(ctx context.Context, query snowboardsdb.ImageQuery) (int, error) {
 	var (
 		total int
 	)
@@ -36,7 +36,7 @@ func (r *imageStore) Count(ctx context.Context, query snowboards.ImageQuery) (in
 	return total, err
 }
 
-func (r *imageStore) List(ctx context.Context, query snowboards.ImageQuery) ([]*snowboards.Image, error) {
+func (r *imageStore) List(ctx context.Context, query snowboardsdb.ImageQuery) ([]*snowboardsdb.Image, error) {
 	sb := SelectFromImages(
 		"id",
 		`"snowboardId"`,
@@ -48,9 +48,9 @@ func (r *imageStore) List(ctx context.Context, query snowboards.ImageQuery) ([]*
 	if len(query.Sort) > 0 {
 		for _, s := range query.Sort {
 			switch s {
-			case snowboards.ImageQuerySortID:
+			case snowboardsdb.ImageQuerySortID:
 				sb.OrderBy(`"id"`)
-			case snowboards.ImageQuerySortIDDesc:
+			case snowboardsdb.ImageQuerySortIDDesc:
 				sb.OrderBy(`"id" desc`)
 			}
 		}
@@ -68,10 +68,10 @@ func (r *imageStore) List(ctx context.Context, query snowboards.ImageQuery) ([]*
 
 	defer rows.Close()
 
-	images := make([]*snowboards.Image, 0)
-	
+	images := make([]*snowboardsdb.Image, 0)
+
 	for rows.Next() {
-		image := new(snowboards.Image)
+		image := new(snowboardsdb.Image)
 
 		err := rows.Scan(
 			&image.ID,
@@ -103,7 +103,7 @@ func SelectFromImages(columns ...string) *imageSelectBuilder {
 	}
 }
 
-func (brands *imageSelectBuilder) Where(query snowboards.ImageQuery) *imageSelectBuilder {
+func (brands *imageSelectBuilder) Where(query snowboardsdb.ImageQuery) *imageSelectBuilder {
 	if len(query.ID) > 0 {
 		brands.SelectBuilder = brands.SelectBuilder.Where(sqrl.Eq{"id": query.ID})
 	}
@@ -115,7 +115,7 @@ func (brands *imageSelectBuilder) Where(query snowboards.ImageQuery) *imageSelec
 	return brands
 }
 
-func (brands *imageSelectBuilder) LimitOffset(query snowboards.ImageQuery) *imageSelectBuilder {
+func (brands *imageSelectBuilder) LimitOffset(query snowboardsdb.ImageQuery) *imageSelectBuilder {
 	if query.Limit != nil {
 		brands.SelectBuilder = brands.SelectBuilder.Limit(*query.Limit)
 	}

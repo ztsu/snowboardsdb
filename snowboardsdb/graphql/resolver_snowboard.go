@@ -3,7 +3,7 @@ package graphql
 import (
 	"context"
 	"fmt"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 	"log"
 )
 
@@ -56,7 +56,7 @@ func (r *snowboardResolver) Images(ctx context.Context, obj *Snowboard, limit in
 		offsetUint64 = uint64(offset)
 	)
 
-	query := snowboards.ImageQuery{
+	query := snowboardsdb.ImageQuery{
 		SnowboardID: []int{obj.ID},
 		Limit:       &limitUint64,
 		Offset:      &offsetUint64,
@@ -78,7 +78,7 @@ func (r *snowboardResolver) Images(ctx context.Context, obj *Snowboard, limit in
 	return items, nil
 }
 
-func imageToGraphQL(i *snowboards.Image) SnowboardImage {
+func imageToGraphQL(i *snowboardsdb.Image) SnowboardImage {
 	switch image := i; {
 	case image.ColorOfBase != nil:
 		return SnowboardBaseImage{

@@ -2,7 +2,7 @@ package graphql
 
 import (
 	"context"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 //
@@ -36,7 +36,7 @@ func (r *brandResolver) Founders(ctx context.Context, obj *Brand) ([]*Person, er
 	return obj.Founders, nil
 }
 
-func personToGraphQL(p *snowboards.Person) *Person {
+func personToGraphQL(p *snowboardsdb.Person) *Person {
 	if p == nil {
 		return nil
 	}

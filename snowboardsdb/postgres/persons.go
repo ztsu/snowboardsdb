@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/elgris/sqrl"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 const (
@@ -19,7 +19,7 @@ func NewPersonsStore(pg *pgxpool.Pool) *personsStore {
 	return &personsStore{pg: pg}
 }
 
-func (r *personsStore) List(ctx context.Context, query snowboards.PersonsQuery) ([]*snowboards.Person, error) {
+func (r *personsStore) List(ctx context.Context, query snowboardsdb.PersonsQuery) ([]*snowboardsdb.Person, error) {
 	q := SelectFromPersons("id", "name").Where(query)
 
 	sql, args, err := q.ToSql()
@@ -34,10 +34,10 @@ func (r *personsStore) List(ctx context.Context, query snowboards.PersonsQuery) 
 
 	defer rows.Close()
 
-	persons := make([]*snowboards.Person, 0)
+	persons := make([]*snowboardsdb.Person, 0)
 
 	for rows.Next() {
-		person := new(snowboards.Person)
+		person := new(snowboardsdb.Person)
 
 		err := rows.Scan(
 			&person.ID,
@@ -66,7 +66,7 @@ func SelectFromPersons(columns ...string) *personsSelectBuilder {
 	}
 }
 
-func (persons *personsSelectBuilder) Where(query snowboards.PersonsQuery) *personsSelectBuilder {
+func (persons *personsSelectBuilder) Where(query snowboardsdb.PersonsQuery) *personsSelectBuilder {
 	if len(query.ID) > 0 {
 		persons.SelectBuilder = persons.SelectBuilder.Where(sqrl.Eq{"id": query.ID})
 	}

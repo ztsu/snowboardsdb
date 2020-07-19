@@ -1,4 +1,4 @@
-package snowboards
+package snowboardsdb
 
 import "context"
 

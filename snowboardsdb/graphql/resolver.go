@@ -1,15 +1,15 @@
 package graphql
 
 import (
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 type Stores struct {
-	Brands     snowboards.BrandsStore
-	Persons    snowboards.PersonsStore
-	Catalogues snowboards.CataloguesStore
-	Snowboards snowboards.SnowboardsStore
-	Images     snowboards.ImageStore
+	Brands     snowboardsdb.BrandsStore
+	Persons    snowboardsdb.PersonsStore
+	Catalogues snowboardsdb.CataloguesStore
+	Snowboards snowboardsdb.SnowboardsStore
+	Images     snowboardsdb.ImageStore
 }
 
 type rootResolver struct {
@@ -26,7 +26,9 @@ func (r *rootResolver) BrandCatalogues() BrandCataloguesResolver { return &brand
 
 func (r *rootResolver) Brands() BrandsResolver { return &brandsResolver{r} }
 
-func (r *rootResolver) CatalogueOnIssuu() CatalogueOnIssuuResolver { return &catalogueOnIssuuResolver{r} }
+func (r *rootResolver) CatalogueOnIssuu() CatalogueOnIssuuResolver {
+	return &catalogueOnIssuuResolver{r}
+}
 
 func (r *rootResolver) Catalogues() CataloguesResolver { return &cataloguesResolver{r} }
 

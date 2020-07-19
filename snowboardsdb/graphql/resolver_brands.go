@@ -3,7 +3,7 @@ package graphql
 import (
 	"context"
 	"fmt"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 	"strings"
 )
 
@@ -42,8 +42,8 @@ func (r *brandsResolver) List(
 	return output, nil
 }
 
-func brandListFilterToQuery(filter *BrandListFilter) snowboards.BrandsQuery {
-	query := snowboards.BrandsQuery{}
+func brandListFilterToQuery(filter *BrandListFilter) snowboardsdb.BrandsQuery {
+	query := snowboardsdb.BrandsQuery{}
 
 	if filter != nil {
 		query.ID = filter.ID
@@ -56,7 +56,7 @@ func brandListFilterToQuery(filter *BrandListFilter) snowboards.BrandsQuery {
 	return query
 }
 
-func limitBrandsQuery(query snowboards.BrandsQuery, limit, offset int) snowboards.BrandsQuery {
+func limitBrandsQuery(query snowboardsdb.BrandsQuery, limit, offset int) snowboardsdb.BrandsQuery {
 	var (
 		limitUint64  = uint64(limit)
 		offsetUint64 = uint64(offset)
@@ -68,22 +68,22 @@ func limitBrandsQuery(query snowboards.BrandsQuery, limit, offset int) snowboard
 	return query
 }
 
-func sortBrandsQuery(query snowboards.BrandsQuery, sort BrandListSort) snowboards.BrandsQuery {
+func sortBrandsQuery(query snowboardsdb.BrandsQuery, sort BrandListSort) snowboardsdb.BrandsQuery {
 	switch sort {
 	case BrandListSortIDAsc:
-		query.Sort = append(query.Sort, snowboards.BrandsQuerySortID)
+		query.Sort = append(query.Sort, snowboardsdb.BrandsQuerySortID)
 	case BrandListSortIDDesc:
-		query.Sort = append(query.Sort, snowboards.BrandsQuerySortIDDesc)
+		query.Sort = append(query.Sort, snowboardsdb.BrandsQuerySortIDDesc)
 	case BrandListSortNameAsc:
-		query.Sort = append(query.Sort, snowboards.BrandsQuerySortName)
+		query.Sort = append(query.Sort, snowboardsdb.BrandsQuerySortName)
 	case BrandListSortNameDesc:
-		query.Sort = append(query.Sort, snowboards.BrandsQuerySortNameDesc)
+		query.Sort = append(query.Sort, snowboardsdb.BrandsQuerySortNameDesc)
 	}
 
 	return query
 }
 
-func brandToGraphQL(b *snowboards.Brand) *Brand {
+func brandToGraphQL(b *snowboardsdb.Brand) *Brand {
 	if b == nil {
 		return nil
 	}

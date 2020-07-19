@@ -2,7 +2,7 @@ package graphql
 
 import (
 	"context"
-	"github.com/ztsu/snowboardsdb/snowboards/dataloader"
+	"github.com/ztsu/snowboardsdb/snowboardsdb/dataloader"
 	"net/http"
 )
 

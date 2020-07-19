@@ -3,7 +3,7 @@ package graphql
 import (
 	"context"
 	"fmt"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 //
@@ -24,7 +24,7 @@ func (r *snowboardsResolver) List(
 		offsetUint64 = uint64(offset)
 	)
 
-	query := snowboards.SnowboardsQuery{
+	query := snowboardsdb.SnowboardsQuery{
 		Limit:  &limitUint64,
 		Offset: &offsetUint64,
 	}
@@ -43,13 +43,13 @@ func (r *snowboardsResolver) List(
 
 	switch sort {
 	case SnowboardListSortNameAsc:
-		query.Sort = append(query.Sort, snowboards.SnowboardsQuerySortName)
+		query.Sort = append(query.Sort, snowboardsdb.SnowboardsQuerySortName)
 	case SnowboardListSortNameDesc:
-		query.Sort = append(query.Sort, snowboards.SnowboardsQuerySortNameDesc)
+		query.Sort = append(query.Sort, snowboardsdb.SnowboardsQuerySortNameDesc)
 	case SnowboardListSortSeasonAsc:
-		query.Sort = append(query.Sort, snowboards.SnowboardsQuerySortSeason)
+		query.Sort = append(query.Sort, snowboardsdb.SnowboardsQuerySortSeason)
 	case SnowboardListSortSeasonDesc:
-		query.Sort = append(query.Sort, snowboards.SnowboardsQuerySortSeasonDesc)
+		query.Sort = append(query.Sort, snowboardsdb.SnowboardsQuerySortSeasonDesc)
 	}
 
 	snowboards, err := r.Stores.Snowboards.List(ctx, query)
@@ -79,7 +79,7 @@ func (r *snowboardsResolver) List(
 }
 
 func (r *snowboardsResolver) Total(ctx context.Context, obj *Snowboards, filter *SnowboardListFilter) (int, error) {
-	query := snowboards.SnowboardsQuery{}
+	query := snowboardsdb.SnowboardsQuery{}
 
 	if filter != nil {
 		query.ID = filter.ID
@@ -96,7 +96,7 @@ func (r *snowboardsResolver) Total(ctx context.Context, obj *Snowboards, filter 
 	return r.Stores.Snowboards.Count(ctx, query)
 }
 
-func snowboardToGraphQL(c *snowboards.Snowboard) (*Snowboard, error) {
+func snowboardToGraphQL(c *snowboardsdb.Snowboard) (*Snowboard, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -120,13 +120,13 @@ func snowboardToGraphQL(c *snowboards.Snowboard) (*Snowboard, error) {
 	}, nil
 }
 
-func snowboardTypeToGraphQL(st snowboards.SnowboardType) (*SnowboardType, error) {
-	typeToGraphQL := map[snowboards.SnowboardType]SnowboardType{
-		snowboards.SnowboardTypeSnowboard:   SnowboardTypeSnowboard,
-		snowboards.SnowboardTypeSplitboard:  SnowboardTypeSplitboard,
-		snowboards.SnowboardTypePowsurfer:   SnowboardTypePowsurfer,
-		snowboards.SnowboardTypeSplitsurfer: SnowboardTypeSplitsurfer,
-		snowboards.SnowboardTypeSnowskate:   SnowboardTypeSnowskate,
+func snowboardTypeToGraphQL(st snowboardsdb.SnowboardType) (*SnowboardType, error) {
+	typeToGraphQL := map[snowboardsdb.SnowboardType]SnowboardType{
+		snowboardsdb.SnowboardTypeSnowboard:   SnowboardTypeSnowboard,
+		snowboardsdb.SnowboardTypeSplitboard:  SnowboardTypeSplitboard,
+		snowboardsdb.SnowboardTypePowsurfer:   SnowboardTypePowsurfer,
+		snowboardsdb.SnowboardTypeSplitsurfer: SnowboardTypeSplitsurfer,
+		snowboardsdb.SnowboardTypeSnowskate:   SnowboardTypeSnowskate,
 	}
 
 	if t, ok := typeToGraphQL[st]; ok {

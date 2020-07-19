@@ -2,7 +2,7 @@ package graphql
 
 import (
 	"context"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 //
@@ -20,7 +20,7 @@ func (r *brandCataloguesResolver) List(ctx context.Context, obj *BrandCatalogues
 		offsetUint64 = uint64(0)
 	)
 
-	query := snowboards.CataloguesQuery{
+	query := snowboardsdb.CataloguesQuery{
 		BrandID: []int{obj.Brand.ID},
 		Limit:   &limitUint64,
 		Offset:  &offsetUint64,
@@ -34,13 +34,13 @@ func (r *brandCataloguesResolver) List(ctx context.Context, obj *BrandCatalogues
 
 	switch sort {
 	case CatalogueListSortIDAsc:
-		query.Sort = append(query.Sort, snowboards.CataloguesQuerySortID)
+		query.Sort = append(query.Sort, snowboardsdb.CataloguesQuerySortID)
 	case CatalogueListSortIDDesc:
-		query.Sort = append(query.Sort, snowboards.CataloguesQuerySortIDDesc)
+		query.Sort = append(query.Sort, snowboardsdb.CataloguesQuerySortIDDesc)
 	case CatalogueListSortSeasonAsc:
-		query.Sort = append(query.Sort, snowboards.CataloguesQuerySortSeason)
+		query.Sort = append(query.Sort, snowboardsdb.CataloguesQuerySortSeason)
 	case CatalogueListSortSeasonDesc:
-		query.Sort = append(query.Sort, snowboards.CataloguesQuerySortSeasonDesc)
+		query.Sort = append(query.Sort, snowboardsdb.CataloguesQuerySortSeasonDesc)
 	}
 
 	catalogues, err := r.Stores.Catalogues.List(ctx, query)
@@ -69,7 +69,7 @@ func (r *brandCataloguesResolver) List(ctx context.Context, obj *BrandCatalogues
 }
 
 func (r *brandCataloguesResolver) Total(ctx context.Context, obj *BrandCatalogues, filter *BrandCataloguesListFilter) (int, error) {
-	query := snowboards.CataloguesQuery{
+	query := snowboardsdb.CataloguesQuery{
 		BrandID: []int{obj.Brand.ID},
 	}
 

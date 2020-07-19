@@ -3,7 +3,7 @@
 package dataloader
 
 import (
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 	"sync"
 	"time"
 )
@@ -11,7 +11,7 @@ import (
 // BrandCataloguesLoaderConfig captures the config to create a new BrandCataloguesLoader
 type BrandCataloguesLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []int) ([][]*snowboards.Catalogue, []error)
+	Fetch func(keys []int) ([][]*snowboardsdb.Catalogue, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -32,7 +32,7 @@ func NewBrandCataloguesLoader(config BrandCataloguesLoaderConfig) *BrandCatalogu
 // BrandCataloguesLoader batches and caches requests
 type BrandCataloguesLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []int) ([][]*snowboards.Catalogue, []error)
+	fetch func(keys []int) ([][]*snowboardsdb.Catalogue, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -43,7 +43,7 @@ type BrandCataloguesLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[int][]*snowboards.Catalogue
+	cache map[int][]*snowboardsdb.Catalogue
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -55,25 +55,25 @@ type BrandCataloguesLoader struct {
 
 type brandCataloguesLoaderBatch struct {
 	keys    []int
-	data    [][]*snowboards.Catalogue
+	data    [][]*snowboardsdb.Catalogue
 	error   []error
 	closing bool
 	done    chan struct{}
 }
 
 // Load a Catalogue by key, batching and caching will be applied automatically
-func (l *BrandCataloguesLoader) Load(key int) ([]*snowboards.Catalogue, error) {
+func (l *BrandCataloguesLoader) Load(key int) ([]*snowboardsdb.Catalogue, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a Catalogue.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *BrandCataloguesLoader) LoadThunk(key int) func() ([]*snowboards.Catalogue, error) {
+func (l *BrandCataloguesLoader) LoadThunk(key int) func() ([]*snowboardsdb.Catalogue, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
-		return func() ([]*snowboards.Catalogue, error) {
+		return func() ([]*snowboardsdb.Catalogue, error) {
 			return it, nil
 		}
 	}
@@ -84,10 +84,10 @@ func (l *BrandCataloguesLoader) LoadThunk(key int) func() ([]*snowboards.Catalog
 	pos := batch.keyIndex(l, key)
 	l.mu.Unlock()
 
-	return func() ([]*snowboards.Catalogue, error) {
+	return func() ([]*snowboardsdb.Catalogue, error) {
 		<-batch.done
 
-		var data []*snowboards.Catalogue
+		var data []*snowboardsdb.Catalogue
 		if pos < len(batch.data) {
 			data = batch.data[pos]
 		}
@@ -112,14 +112,14 @@ func (l *BrandCataloguesLoader) LoadThunk(key int) func() ([]*snowboards.Catalog
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *BrandCataloguesLoader) LoadAll(keys []int) ([][]*snowboards.Catalogue, []error) {
-	results := make([]func() ([]*snowboards.Catalogue, error), len(keys))
+func (l *BrandCataloguesLoader) LoadAll(keys []int) ([][]*snowboardsdb.Catalogue, []error) {
+	results := make([]func() ([]*snowboardsdb.Catalogue, error), len(keys))
 
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
 
-	catalogues := make([][]*snowboards.Catalogue, len(keys))
+	catalogues := make([][]*snowboardsdb.Catalogue, len(keys))
 	errors := make([]error, len(keys))
 	for i, thunk := range results {
 		catalogues[i], errors[i] = thunk()
@@ -130,13 +130,13 @@ func (l *BrandCataloguesLoader) LoadAll(keys []int) ([][]*snowboards.Catalogue, 
 // LoadAllThunk returns a function that when called will block waiting for a Catalogues.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *BrandCataloguesLoader) LoadAllThunk(keys []int) func() ([][]*snowboards.Catalogue, []error) {
-	results := make([]func() ([]*snowboards.Catalogue, error), len(keys))
+func (l *BrandCataloguesLoader) LoadAllThunk(keys []int) func() ([][]*snowboardsdb.Catalogue, []error) {
+	results := make([]func() ([]*snowboardsdb.Catalogue, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
-	return func() ([][]*snowboards.Catalogue, []error) {
-		catalogues := make([][]*snowboards.Catalogue, len(keys))
+	return func() ([][]*snowboardsdb.Catalogue, []error) {
+		catalogues := make([][]*snowboardsdb.Catalogue, len(keys))
 		errors := make([]error, len(keys))
 		for i, thunk := range results {
 			catalogues[i], errors[i] = thunk()
@@ -148,13 +148,13 @@ func (l *BrandCataloguesLoader) LoadAllThunk(keys []int) func() ([][]*snowboards
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *BrandCataloguesLoader) Prime(key int, value []*snowboards.Catalogue) bool {
+func (l *BrandCataloguesLoader) Prime(key int, value []*snowboardsdb.Catalogue) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
 		// make a copy when writing to the cache, its easy to pass a pointer in from a loop var
 		// and end up with the whole cache pointing to the same value.
-		cpy := make([]*snowboards.Catalogue, len(value))
+		cpy := make([]*snowboardsdb.Catalogue, len(value))
 		copy(cpy, value)
 		l.unsafeSet(key, cpy)
 	}
@@ -169,9 +169,9 @@ func (l *BrandCataloguesLoader) Clear(key int) {
 	l.mu.Unlock()
 }
 
-func (l *BrandCataloguesLoader) unsafeSet(key int, value []*snowboards.Catalogue) {
+func (l *BrandCataloguesLoader) unsafeSet(key int, value []*snowboardsdb.Catalogue) {
 	if l.cache == nil {
-		l.cache = map[int][]*snowboards.Catalogue{}
+		l.cache = map[int][]*snowboardsdb.Catalogue{}
 	}
 	l.cache[key] = value
 }

@@ -3,7 +3,7 @@ package graphql
 import (
 	"context"
 	"fmt"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 //
@@ -24,7 +24,7 @@ func (r *cataloguesResolver) List(
 		offsetUint64 = uint64(offset)
 	)
 
-	query := snowboards.CataloguesQuery{
+	query := snowboardsdb.CataloguesQuery{
 		Limit:  &limitUint64,
 		Offset: &offsetUint64,
 	}
@@ -43,13 +43,13 @@ func (r *cataloguesResolver) List(
 
 	switch sort {
 	case CatalogueListSortIDAsc:
-		query.Sort = append(query.Sort, snowboards.CataloguesQuerySortID)
+		query.Sort = append(query.Sort, snowboardsdb.CataloguesQuerySortID)
 	case CatalogueListSortIDDesc:
-		query.Sort = append(query.Sort, snowboards.CataloguesQuerySortIDDesc)
+		query.Sort = append(query.Sort, snowboardsdb.CataloguesQuerySortIDDesc)
 	case CatalogueListSortSeasonAsc:
-		query.Sort = append(query.Sort, snowboards.CataloguesQuerySortSeason)
+		query.Sort = append(query.Sort, snowboardsdb.CataloguesQuerySortSeason)
 	case CatalogueListSortSeasonDesc:
-		query.Sort = append(query.Sort, snowboards.CataloguesQuerySortSeasonDesc)
+		query.Sort = append(query.Sort, snowboardsdb.CataloguesQuerySortSeasonDesc)
 	}
 
 	catalogues, err := r.Stores.Catalogues.List(ctx, query)
@@ -78,7 +78,7 @@ func (r *cataloguesResolver) List(
 	return output, nil
 }
 
-func catalogueToGraphQL(c *snowboards.Catalogue) (Catalogue, error) {
+func catalogueToGraphQL(c *snowboardsdb.Catalogue) (Catalogue, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -88,7 +88,7 @@ func catalogueToGraphQL(c *snowboards.Catalogue) (Catalogue, error) {
 		return nil, err
 	}
 
-	if snowboards.CatalogueType(c.Type) == snowboards.CatalogueTypeIssuu {
+	if snowboardsdb.CatalogueType(c.Type) == snowboardsdb.CatalogueTypeIssuu {
 		return &CatalogueOnIssuu{
 			ID:     c.ID,
 			Season: *s,
@@ -111,7 +111,7 @@ func seasonToGraphQL(season string) (*Season, error) {
 }
 
 func (r *cataloguesResolver) Total(ctx context.Context, obj *Catalogues, filter *CatalogueListFilter) (int, error) {
-	query := snowboards.CataloguesQuery{}
+	query := snowboardsdb.CataloguesQuery{}
 
 	if filter != nil {
 		query.ID = filter.ID

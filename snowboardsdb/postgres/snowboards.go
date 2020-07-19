@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/elgris/sqrl"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/ztsu/snowboardsdb/snowboards"
+	"github.com/ztsu/snowboardsdb/snowboardsdb"
 )
 
 const (
@@ -19,7 +19,7 @@ func NewSnowboardsStore(pg *pgxpool.Pool) *snowboardsStore {
 	return &snowboardsStore{pg: pg}
 }
 
-func (store *snowboardsStore) Count(ctx context.Context, query snowboards.SnowboardsQuery) (int, error) {
+func (store *snowboardsStore) Count(ctx context.Context, query snowboardsdb.SnowboardsQuery) (int, error) {
 	var (
 		total int
 	)
@@ -36,7 +36,7 @@ func (store *snowboardsStore) Count(ctx context.Context, query snowboards.Snowbo
 	return total, err
 }
 
-func (store *snowboardsStore) List(ctx context.Context, query snowboards.SnowboardsQuery) ([]*snowboards.Snowboard, error) {
+func (store *snowboardsStore) List(ctx context.Context, query snowboardsdb.SnowboardsQuery) ([]*snowboardsdb.Snowboard, error) {
 	q := SelectFromSnowboards("id", `"brandId"`, "name", "season", "type").
 		Where(query).
 		Sort(query).
@@ -54,10 +54,10 @@ func (store *snowboardsStore) List(ctx context.Context, query snowboards.Snowboa
 
 	defer rows.Close()
 
-	list := make([]*snowboards.Snowboard, 0)
+	list := make([]*snowboardsdb.Snowboard, 0)
 
 	for rows.Next() {
-		snowboard := new(snowboards.Snowboard)
+		snowboard := new(snowboardsdb.Snowboard)
 
 		err := rows.Scan(
 			&snowboard.ID,
@@ -89,7 +89,7 @@ func SelectFromSnowboards(columns ...string) *snowboardsSelectBuilder {
 	}
 }
 
-func (builder *snowboardsSelectBuilder) Where(query snowboards.SnowboardsQuery) *snowboardsSelectBuilder {
+func (builder *snowboardsSelectBuilder) Where(query snowboardsdb.SnowboardsQuery) *snowboardsSelectBuilder {
 	if len(query.ID) > 0 {
 		builder.SelectBuilder = builder.SelectBuilder.Where(sqrl.Eq{"id": query.ID})
 	}
@@ -105,21 +105,21 @@ func (builder *snowboardsSelectBuilder) Where(query snowboards.SnowboardsQuery) 
 	return builder
 }
 
-func (builder *snowboardsSelectBuilder) Sort(query snowboards.SnowboardsQuery) *snowboardsSelectBuilder {
+func (builder *snowboardsSelectBuilder) Sort(query snowboardsdb.SnowboardsQuery) *snowboardsSelectBuilder {
 	if len(query.Sort) > 0 {
 		for _, s := range query.Sort {
 			switch s {
-			case snowboards.SnowboardsQuerySortID:
+			case snowboardsdb.SnowboardsQuerySortID:
 				builder.SelectBuilder = builder.SelectBuilder.OrderBy(`"id"`)
-			case snowboards.SnowboardsQuerySortIDDesc:
+			case snowboardsdb.SnowboardsQuerySortIDDesc:
 				builder.SelectBuilder = builder.SelectBuilder.OrderBy(`"id" desc`)
-			case snowboards.SnowboardsQuerySortName:
+			case snowboardsdb.SnowboardsQuerySortName:
 				builder.SelectBuilder = builder.SelectBuilder.OrderBy(`"name"`)
-			case snowboards.SnowboardsQuerySortNameDesc:
+			case snowboardsdb.SnowboardsQuerySortNameDesc:
 				builder.SelectBuilder = builder.SelectBuilder.OrderBy(`"name" desc`)
-			case snowboards.SnowboardsQuerySortSeason:
+			case snowboardsdb.SnowboardsQuerySortSeason:
 				builder.SelectBuilder = builder.SelectBuilder.OrderBy(`"season"`)
-			case snowboards.SnowboardsQuerySortSeasonDesc:
+			case snowboardsdb.SnowboardsQuerySortSeasonDesc:
 				builder.SelectBuilder = builder.SelectBuilder.OrderBy(`"season" desc`)
 			}
 		}
@@ -128,7 +128,7 @@ func (builder *snowboardsSelectBuilder) Sort(query snowboards.SnowboardsQuery) *
 	return builder
 }
 
-func (builder *snowboardsSelectBuilder) LimitOffset(query snowboards.SnowboardsQuery) *snowboardsSelectBuilder {
+func (builder *snowboardsSelectBuilder) LimitOffset(query snowboardsdb.SnowboardsQuery) *snowboardsSelectBuilder {
 	if query.Limit != nil {
 		builder.SelectBuilder = builder.SelectBuilder.Limit(*query.Limit)
 	}
